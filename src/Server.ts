@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --no-check --allow-net --unstable
+#!/usr/bin/env -S deno run --no-check --allow-net --allow-read --unstable
 import Game from "./Game.ts";
 
 interface WsResponseRaw {
@@ -35,6 +35,17 @@ type Match = {
   player2?: Player;
   results: boolean[];
 };
+
+const canRead =
+  (await Deno.permissions.query({ name: "read", path: "../index.html" }))
+    .state === "granted";
+let httpOutput = "";
+
+if (canRead) {
+  Deno.readFile("./index.html").then((data) =>
+    httpOutput += new TextDecoder().decode(data)
+  );
+}
 
 export default class Server extends Game {
   port: number;
@@ -117,7 +128,10 @@ export default class Server extends Game {
   }
 
   handleHttp(e: Deno.RequestEvent) {
-    e.respondWith(new Response("You weren't supposed to be here"));
+    // coding is wack
+    e.respondWith(
+      new Response(httpOutput, { headers: { "Content-Type": "html" } }),
+    );
   }
 
   start(): Promise<void> {

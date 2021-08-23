@@ -1,4 +1,5 @@
 Dependencies:
-* deno
-* react
-* react-dom
+
+- deno
+- react
+- react-dom
