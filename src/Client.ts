@@ -4,7 +4,7 @@ const ws = new WebSocket("ws://localhost:3000");
 const username = prompt("Please pick a username");
 
 const lookForPlayer = confirm("Want to find a player?");
-ws.onopen = (e) => {
+ws.onopen = () => {
   if (lookForPlayer) {
     const user = prompt("Who are you looking for?");
     ws.send(JSON.stringify({

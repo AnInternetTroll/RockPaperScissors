@@ -1,0 +1,82 @@
+thread 'main' panicked at 'Error 'Unable to output bundle during Graph::bundle().' contains boxed error of unknown type:
+  Error { context: "Unable to output bundle during Graph::bundle().", source: load_transformed failed
+
+Caused by:
+    0: failed to analyze module
+    1: failed to resolve https://esm.sh/react from <file:///home/luca/OneDrive/Skole/Programmering/RockPaperScissors/src/View.tsx>
+    2: The graph is missing a dependency.
+         Specifier: https://esm.sh/react from file:///home/luca/OneDrive/Skole/Programmering/RockPaperScissors/src/View.tsx }
+  Error { context: "load_transformed failed", source: failed to analyze module
+
+Caused by:
+    0: failed to resolve https://esm.sh/react from <file:///home/luca/OneDrive/Skole/Programmering/RockPaperScissors/src/View.tsx>
+    1: The graph is missing a dependency.
+         Specifier: https://esm.sh/react from file:///home/luca/OneDrive/Skole/Programmering/RockPaperScissors/src/View.tsx }
+  Error { context: "failed to analyze module", source: failed to resolve https://esm.sh/react from <file:///home/luca/OneDrive/Skole/Programmering/RockPaperScissors/src/View.tsx>
+
+Caused by:
+    The graph is missing a dependency.
+      Specifier: https://esm.sh/react from file:///home/luca/OneDrive/Skole/Programmering/RockPaperScissors/src/View.tsx }
+  Error { context: "failed to resolve https://esm.sh/react from <file:///home/luca/OneDrive/Skole/Programmering/RockPaperScissors/src/View.tsx>", source: The graph is missing a dependency.
+  Specifier: https://esm.sh/react from file:///home/luca/OneDrive/Skole/Programmering/RockPaperScissors/src/View.tsx }
+  MissingDependency(Url { scheme: "file", cannot_be_a_base: false, username: "", password: None, host: None, port: None, path: "/home/luca/OneDrive/Skole/Programmering/RockPaperScissors/src/View.tsx", query: None, fragment: None }, "https://esm.sh/react")', cli/errors.rs:32:7
+stack backtrace:
+   0:     0x559af2eaf860 - std::backtrace_rs::backtrace::libunwind::trace::h34055254b57d8e79
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/../../backtrace/src/backtrace/libunwind.rs:90:5
+   1:     0x559af2eaf860 - std::backtrace_rs::backtrace::trace_unsynchronized::h8f1e3fbd9afff6ec
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/../../backtrace/src/backtrace/mod.rs:66:5
+   2:     0x559af2eaf860 - std::sys_common::backtrace::_print_fmt::h3a99a796b770c360
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/sys_common/backtrace.rs:67:5
+   3:     0x559af2eaf860 - <std::sys_common::backtrace::_print::DisplayBacktrace as core::fmt::Display>::fmt::h32d1f94a80615d18
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/sys_common/backtrace.rs:46:22
+   4:     0x559af2eda76c - core::fmt::write::h306731c068f7162c
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/core/src/fmt/mod.rs:1110:17
+   5:     0x559af2ea6f65 - std::io::Write::write_fmt::hd2fa90334eee2a21
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/io/mod.rs:1588:15
+   6:     0x559af2eb206b - std::sys_common::backtrace::_print::h5abaa2601a852287
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/sys_common/backtrace.rs:49:5
+   7:     0x559af2eb206b - std::sys_common::backtrace::print::h8d81445442bb638f
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/sys_common/backtrace.rs:36:9
+   8:     0x559af2eb206b - std::panicking::default_hook::{{closure}}::hcfe804496a9fa747
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/panicking.rs:208:50
+   9:     0x559af2eb1b41 - std::panicking::default_hook::hbea8e3ccf2ba8901
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/panicking.rs:225:9
+  10:     0x559af2eb28a4 - std::panicking::rust_panic_with_hook::h7ee9e1a2d0f8975a
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/panicking.rs:622:17
+  11:     0x559af2eb2357 - std::panicking::begin_panic_handler::{{closure}}::h8ab3b4491718b2c7
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/panicking.rs:519:13
+  12:     0x559af2eafd5c - std::sys_common::backtrace::__rust_end_short_backtrace::hd489062ffa586a9f
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/sys_common/backtrace.rs:141:18
+  13:     0x559af2eb22b9 - rust_begin_unwind
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/panicking.rs:515:5
+  14:     0x559af2eb226b - std::panicking::begin_panic_fmt::h5479575e112541f8
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/panicking.rs:457:5
+  15:     0x559af3175d7f - deno::errors::get_error_class_name::{{closure}}::h555be96669dc0508
+  16:     0x559af3175c65 - deno::errors::get_error_class_name::hc53a468b6a7e0056
+  17:     0x559af3135b8c - deno_core::ops::serialize_op_result::ha3c91cca8892120d
+  18:     0x559af31334d7 - <futures_util::future::future::Map<Fut,F> as core::future::future::Future>::poll::h4f9ac6385426b605
+  19:     0x559af34b0ba1 - <futures_util::future::future::Inspect<Fut,F> as core::future::future::Future>::poll::h3afd9a55a48c9791
+  20:     0x559af3dc972c - futures_util::stream::stream::StreamExt::poll_next_unpin::h6cddc911e30b59f8
+  21:     0x559af3dfc613 - deno_core::runtime::JsRuntime::poll_event_loop::h56ad98eb21fe2a48
+  22:     0x559af30f199c - <core::future::from_generator::GenFuture<T> as core::future::future::Future>::poll::h70b464e1da7dba08
+  23:     0x559af30ce0b8 - <core::future::from_generator::GenFuture<T> as core::future::future::Future>::poll::h1867f44bc5d05bdf
+  24:     0x559af321070a - deno::run_command::{{closure}}::h8bffcf42eeca1b16
+  25:     0x559af30ec98a - <core::future::from_generator::GenFuture<T> as core::future::future::Future>::poll::h66f6b40344212a88
+  26:     0x559af312dbab - <core::future::from_generator::GenFuture<T> as core::future::future::Future>::poll::hfc82e3dd74d84ae7
+  27:     0x559af3214ac0 - deno::main::hdf4c5c410d3bcbba
+  28:     0x559af2f6e808 - std::sys_common::backtrace::__rust_begin_short_backtrace::h201585956898e09e
+  29:     0x559af2f7434a - std::rt::lang_start::{{closure}}::hb862bae09ce38319
+  30:     0x559af2eb2ea9 - core::ops::function::impls::<impl core::ops::function::FnOnce<A> for &F>::call_once::h2aabc384aab89b7b
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/core/src/ops/function.rs:259:13
+  31:     0x559af2eb2ea9 - std::panicking::try::do_call::hc5fcacb7a85fc7b1
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/panicking.rs:401:40
+  32:     0x559af2eb2ea9 - std::panicking::try::hb5d9603af3abbe3a
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/panicking.rs:365:19
+  33:     0x559af2eb2ea9 - std::panic::catch_unwind::h98fe6ac3925e64b4
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/panic.rs:434:14
+  34:     0x559af2eb2ea9 - std::rt::lang_start_internal::h22ac7383c516f93e
+                               at /rustc/a178d0322ce20e33eac124758e837cbd80a6f633/library/std/src/rt.rs:34:21
+  35:     0x559af322ae63 - main
+  36:     0x7f130f3ffb25 - __libc_start_main
+  37:     0x559af20b102a - _start
+  38:                0x0 - <unknown>

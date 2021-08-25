@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --no-check --allow-net --allow-read --unstable
+#!/usr/bin/env -S deno run --no-check --allow-net --allow-read=./ --unstable --watch
 import Game from "./Game.ts";
 
 interface WsResponseRaw {
@@ -36,15 +36,12 @@ type Match = {
   results: boolean[];
 };
 
-const canRead =
-  (await Deno.permissions.query({ name: "read", path: "../index.html" }))
-    .state === "granted";
-let httpOutput = "";
+const canRead = (await Deno.permissions.request({ name: "read", path: "./" }))
+  .state === "granted";
 
-if (canRead) {
-  Deno.readFile("./index.html").then((data) =>
-    httpOutput += new TextDecoder().decode(data)
-  );
+if (!canRead) {
+  console.log("Please give permission to read in the current directory");
+  Deno.exit(1);
 }
 
 export default class Server extends Game {
@@ -129,9 +126,47 @@ export default class Server extends Game {
 
   handleHttp(e: Deno.RequestEvent) {
     // coding is wack
-    e.respondWith(
-      new Response(httpOutput, { headers: { "Content-Type": "html" } }),
-    );
+    const path = new URL(e.request.url).pathname;
+    try {
+      const file = Deno.readFileSync(
+        `./${path.split("/").at(-1) ? path : `${path}index.html`}`,
+      );
+      let contentType = "";
+      const ext = path.split(".").at(-1);
+      switch (ext) {
+        case "js":
+          contentType = "application/javascript";
+          break;
+        case "html":
+          contentType = "text/html";
+          break;
+        case "json":
+          contentType = "application/json";
+          break;
+        case "css":
+          contentType = "text/css";
+          break;
+        default:
+          contentType = "text/html";
+          break;
+      }
+      e.respondWith(
+        new Response(new TextDecoder().decode(file), {
+          headers: { "Content-Type": contentType },
+        }),
+      );
+    } catch (err) {
+      console.log();
+      if (err instanceof Deno.errors.NotFound) {
+        e.respondWith(new Response("Not found", { status: 404 }));
+      } else {
+        e.respondWith(
+          new Response(`Something went baaaaad\n${JSON.stringify(err)}`, {
+            status: 500,
+          }),
+        );
+      }
+    }
   }
 
   start(): Promise<void> {
@@ -145,10 +180,10 @@ export default class Server extends Game {
   }
 
   round(player1Socket: WebSocket, player2Socket: WebSocket): Promise<boolean> {
-    let player1Res: string = "";
-    let player2Res: string = "";
+    let player1Res = "";
+    let player2Res = "";
 
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>((resolve) => {
       player1Socket.onmessage = (message) => {
         const data = JSON.parse(message.data) as WsResponse;
         if (data.op === 3) player1Res = data.d;
@@ -194,7 +229,7 @@ export default class Server extends Game {
     player1Res: string,
     player2Res: string,
   ): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>((resolve) => {
       const player1Item = this.items.find((item) => item.name === player1Res);
       const player2Item = this.items.find((item) => item.name === player2Res);
       if (player1Item && player2Item) {
@@ -203,7 +238,7 @@ export default class Server extends Game {
         player2Socket.send(
           JSON.stringify({
             op: 3,
-            d: result === "win" ? "lose" : result === "draw" ? "draw" : "win",
+            d: result === "win" ? "lose" : (result === "draw" ? "draw" : "win"),
           }),
         );
         resolve(result === "win");
