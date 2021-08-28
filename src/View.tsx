@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "https://esm.sh/react";
 import { render } from "https://esm.sh/react-dom";
 
 import { Game, Item } from "./mod.ts";
+import type { CompareReturn, Rules } from "./mod.ts";
 
 interface PlayerHuman {
   bot: false;
@@ -14,6 +15,7 @@ interface PlayerHuman {
 }
 
 interface PlayerBot {
+  username?: string;
   bot: true;
   item?: Item;
   playerPos: 1 | 2;
@@ -61,7 +63,10 @@ function PlayerView(
       useState<number>();
 
     const [botPreview, setBotPreview] = useState<Item>();
-
+    useEffect(() => {
+      if (!player.item) setBotItemPreviewRandomlyInterval(undefined);
+      setBotPreview(undefined);
+    }, [setBotItemPreviewRandomlyInterval, setBotPreview, player.item]);
     useEffect(() => {
       if (!player.item && !botItemPreviewRandomlyInterval) {
         let index = game.items.length - 1;
@@ -103,77 +108,129 @@ function PlayerView(
 
 function GameView({ player1, player2, game }: GameViewOpts) {
   const [result, setResult] = useState("");
+  const [results, setResults] = useState<boolean[]>([]);
 
-  const [timerPreview, setTimerPreview] = useState(3);
+  const [timerPreview, setTimerPreview] = useState(game.time);
   const [timerPreviewInterval, setTimerPreviewInterval] = useState<number>();
-""
-  useEffect(
-    () => {
-      if (player1.item && player2.item) {
-        if (!player1.bot && (timerPreview && timerPreview !== 1)) {
-          setResult("Too early");
-          clearInterval(timerPreviewInterval);
-        } else if (!timerPreview) {
-          return;
-        } else {
-          clearInterval(timerPreviewInterval);
-          setResult(Game.compare(player1.item, player2.item));
-        }
-      }
-    },
-    [
-      player1.item,
-      player2.item,
-      setResult,
-      Game.compare,
-      clearInterval,
-      timerPreviewInterval,
-    ],
-  );
 
-  useEffect(() => {
-    let timerPreviewTemp = timerPreview;
-    setTimerPreviewInterval(
-      setInterval(() => {
-        if (timerPreviewTemp !== -1) {
-          setTimerPreview(timerPreviewTemp--);
+  function stopOrReset() {
+    console.log(results);
+    if (
+      results.filter((res) => res).length >= game.triesLimit ||
+      results.filter((res) => !res).length >= game.triesLimit
+    ) {
+      stop();
+    } else reset();
+  }
+
+  function reset() {
+    setTimerPreview(game.time);
+    setTimerPreviewInterval(undefined);
+    if (!player1.bot) player1.setItem(undefined);
+    if (!player2.bot) player2.setItem(undefined);
+  }
+
+  function stop() {
+    clearInterval(timerPreviewInterval);
+    setTimerPreview(undefined);
+    setResult("End game");
+  }
+
+  useEffect(() => stopOrReset(), [
+    results,
+  ]);
+
+  if (game.time) {
+    useEffect(
+      () => {
+        if (player1.item && player2.item) {
+          if (!player1.bot && (timerPreview && timerPreview !== 1)) {
+            setResult("Too early");
+            clearInterval(timerPreviewInterval);
+            setResults([...results, false]);
+          } else if (!timerPreview) {
+            return;
+          } else {
+            clearInterval(timerPreviewInterval);
+            const res = Game.compare(player1.item, player2.item);
+            setResult(res);
+            if (res === "draw") return reset();
+            setResults([...results, res === "win"]);
+          }
         }
-      }, 1000),
+      },
+      [
+        player1.item,
+        player2.item,
+        setResult,
+        Game.compare,
+        clearInterval,
+        timerPreviewInterval,
+      ],
     );
-    if (timerPreviewTemp === timerPreview) timerPreviewTemp--;
-  }, [setTimerPreviewInterval, setInterval, setTimerPreview]);
 
-  useEffect(() => {
-    if (!timerPreview && timerPreviewInterval) {
-      clearInterval(timerPreviewInterval);
-      setResult("Too late");
-    }
-  }, [timerPreview, clearInterval, timerPreviewInterval]);
+    useEffect(() => {
+      if (!timerPreview || timerPreviewInterval) return;
+      let timerPreviewTemp = timerPreview;
+      setTimerPreviewInterval(
+        setInterval(() => {
+          if (timerPreviewTemp !== -1) {
+            setTimerPreview(timerPreviewTemp--);
+          }
+        }, 1000),
+      );
+      if (timerPreviewTemp === timerPreview) timerPreviewTemp--;
+    }, [setTimerPreviewInterval, setInterval, setTimerPreview, timerPreview]);
 
+    useEffect(() => {
+      if (!timerPreview && timerPreviewInterval) {
+        clearInterval(timerPreviewInterval);
+        setResult("Too late");
+        setResults([...results, false]);
+      }
+    }, [timerPreview, clearInterval, timerPreviewInterval, setResult]);
+  } else {
+    useEffect(() => {
+      if (player1.item && player2.item) {
+        const res = Game.compare(player1.item, player2.item);
+        if (res === "draw") return reset();
+        setResult(res);
+        setResults([...results, res === "win"]);
+      }
+    }, [player1.item, player2.item, setResult, Game.compare]);
+  }
   return (
     <div className="gameview">
       <PlayerView player={player1} game={game} />
+      {game.time
+        ? (
+          <p
+            className="timer"
+            style={{
+              color: timerPreview !== 1 ? "red" : "green",
+            }}
+          >
+            {timerPreview}
+          </p>
+        )
+        : ""}
       <p className="result">{result}</p>
-      <p
-        className="timer"
-        style={{
-          color: timerPreview !== 1 ? "red" : "green",
-        }}
-      >
-        {timerPreview}
-      </p>
+      <p className="results">{results.map((result) => (result ? "x" : "o"))}</p>
       <PlayerView player={player2} game={game} />
     </div>
   );
 }
 
 function Offline() {
-  const game = new Game();
+  const game = new Game({ time: 3 });
 
   const [userChoice, setUserChoice] = useState<Item>();
   const [botChoice, setBotChoice] = useState<Item>();
 
-  useEffect(() => userChoice && setBotChoice(game.bot_attempt()), [
+  useEffect(() => {
+    if (userChoice) setBotChoice(game.bot_attempt());
+    else setBotChoice(undefined);
+  }, [
     userChoice,
     setUserChoice,
     game.bot_attempt,
@@ -227,10 +284,16 @@ function Online() {
   const [against, setAgainst] = useState("");
   const [username, setUsername] = useState("");
 
-  const [status, setStatus] = useState("");
-  function connect() {
-    const ws = new WebSocket("ws://localhost:3000");
+  const [player1Item, setPlayer1Item] = useState<Item>();
+  const [player2Item, setPlayer2Item] = useState<Item>();
+  const [game, setGame] = useState<Game>();
 
+  const [status, setStatus] = useState("");
+
+  const [ws, setWs] = useState<WebSocket>();
+
+  function connect() {
+    if (!ws) return;
     ws.onopen = (e) => {
       if (lookForPlayer) {
         ws.send(JSON.stringify({
@@ -252,16 +315,41 @@ function Online() {
     ws.onmessage = (e) => {
       const data = JSON.parse(e.data);
       setStatus(e.data);
+      console.log(e.data);
       switch (data.op) {
         case 2: {
-          console.log("Joined!");
-          const res = prompt("Rock, paper or scissors:");
-          ws.send(JSON.stringify({ op: 3, d: res }));
+          if (data.d.status === "ready") {
+            setGame(
+              new Game({
+                items: (data.d.rules as Rules).items.map((item) =>
+                  new Item(item.weakness, {
+                    name: item.name,
+                    picture: item.picture,
+                  })
+                ),
+                tries: (data.d.rules as Rules).tries,
+                time: null,
+              }),
+            );
+            setPlayer1Item(undefined);
+            setPlayer2Item(undefined);
+          }
+          break;
+        }
+        case 3: {
+          setPlayer2Item(game?.items.find((item) => item.name === data.d));
           break;
         }
       }
     };
   }
+  useEffect(() => connect(), [ws, connect]);
+  useEffect(
+    () =>
+      (ws && player1Item) &&
+      ws.send(JSON.stringify({ op: 3, d: player1Item.name })),
+    [ws, player1Item, JSON.stringify],
+  );
   return (
     <>
       <label>What's your username?</label>
@@ -286,7 +374,29 @@ function Online() {
           </>
         )
         : ""}
-      <button onClick={connect}>Connect</button>
+      <button onClick={() => setWs(new WebSocket(`ws://${location.host}`))}>
+        Connect
+      </button>
+      {game
+        ? (
+          <GameView
+            player1={{
+              username,
+              bot: false,
+              playerPos: 1,
+              setItem: setPlayer1Item,
+              item: player1Item,
+            }}
+            player2={{
+              username,
+              bot: true,
+              playerPos: 2,
+              item: player2Item,
+            }}
+            game={game}
+          />
+        )
+        : ""}
       <p>{status}</p>
     </>
   );

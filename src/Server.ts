@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --no-check --allow-net --allow-read=./ --unstable --watch
+#!/usr/bin/env -S deno run --no-check --allow-net --allow-read --unstable --watch
 import Game from "./Game.ts";
 
 interface WsResponseRaw {
@@ -39,6 +39,8 @@ type Match = {
 const canRead = (await Deno.permissions.request({ name: "read", path: "./" }))
   .state === "granted";
 
+const cache: Record<string, string | null> = {};
+
 if (!canRead) {
   console.log("Please give permission to read in the current directory");
   Deno.exit(1);
@@ -47,13 +49,19 @@ if (!canRead) {
 export default class Server extends Game {
   port: number;
   matches: Match[];
-  itemNames: string[];
 
   constructor(port: number = 3000) {
     super();
     this.port = port;
     this.matches = [];
-    this.itemNames = this.items.map((item) => item.name);
+  }
+
+  static JSMinify(code: string): string {
+    return code.split("\n").map((l) =>
+      l.trim()
+        .replace(/\s*([,:=|+]{1,2})\s+/g, "$1")
+        .replaceAll(") {", "){")
+    ).join("");
   }
 
   async startServer() {
@@ -81,10 +89,11 @@ export default class Server extends Game {
 
   handleWebsocket(e: Deno.RequestEvent): void {
     const { socket, response } = Deno.upgradeWebSocket(e.request);
+    let matchIndex: number;
+    socket.onclose = () => matchIndex && this.matches.splice(matchIndex, 1);
     socket.onopen = () => console.log("socket opened");
     socket.onmessage = (e) => {
       const data = JSON.parse(e.data) as WsResponse;
-      console.log(data);
       switch (data.op) {
         // Ping
         case 1: {
@@ -94,21 +103,41 @@ export default class Server extends Game {
         // Join
         case 2: {
           if (data.d?.against) {
-            const matchAvailable = this.matches.find((match) =>
-              match.player1.name === data.d.against
-            );
+            const matchAvailable = this.matches.find((match, index) => {
+              matchIndex = index;
+              return match.player1.name === data.d.against;
+            });
             if (matchAvailable) {
-              this.match(matchAvailable.player1.ws, socket);
+              socket.send(
+                JSON.stringify({
+                  op: 2,
+                  d: {
+                    status: "waiting",
+                    rules: this.rules,
+                    msg: "Waiting for player1",
+                  },
+                }),
+              );
+              this.match(matchAvailable.player1.ws, socket, matchIndex);
             } else {
               socket.send(JSON.stringify({ op: 9, d: "Not found" }));
               socket.close(404);
             }
           } else {
-            this.matches.push({
+            matchIndex = this.matches.push({
               player1: { ws: socket, name: data.d.name },
               results: [],
             });
-            socket.send(JSON.stringify({ op: 4, d: "Waiting for player" }));
+            socket.send(
+              JSON.stringify({
+                op: 2,
+                d: {
+                  status: "waiting",
+                  rules: this.rules,
+                  msg: "Waiting for player2",
+                },
+              }),
+            );
           }
           break;
         }
@@ -124,19 +153,54 @@ export default class Server extends Game {
     e.respondWith(response);
   }
 
-  handleHttp(e: Deno.RequestEvent) {
+  async handleHttp(e: Deno.RequestEvent) {
     // coding is wack
     const path = new URL(e.request.url).pathname;
+    const pathToFile = `.${
+      path.split("/").at(-1) ? path : `${path}index.html`
+    }`;
     try {
       const file = Deno.readFileSync(
-        `./${path.split("/").at(-1) ? path : `${path}index.html`}`,
+        pathToFile,
       );
       let contentType = "";
       const ext = path.split(".").at(-1);
       switch (ext) {
+        case "svg": {
+          contentType = "image/svg+xml";
+          break;
+        }
         case "js":
           contentType = "application/javascript";
           break;
+        case "tsx":
+        case "ts": {
+          contentType = "application/javascript";
+          if (!cache[pathToFile]) {
+            const { files } = await Deno.emit(pathToFile, {
+              check: false,
+              bundle: "module",
+              compilerOptions: {
+                inlineSourceMap: true,
+              },
+            });
+            for (const [_, text] of Object.entries(files)) {
+              cache[pathToFile] = Server.JSMinify(text);
+              return e.respondWith(
+                new Response(text, {
+                  headers: { "Content-Type": contentType },
+                }),
+              );
+            }
+          } else {
+            return e.respondWith(
+              new Response(cache[pathToFile], {
+                headers: { "Content-Type": contentType },
+              }),
+            );
+          }
+          break;
+        }
         case "html":
           contentType = "text/html";
           break;
@@ -156,10 +220,10 @@ export default class Server extends Game {
         }),
       );
     } catch (err) {
-      console.log();
       if (err instanceof Deno.errors.NotFound) {
         e.respondWith(new Response("Not found", { status: 404 }));
       } else {
+        console.log(err);
         e.respondWith(
           new Response(`Something went baaaaad\n${JSON.stringify(err)}`, {
             status: 500,
@@ -169,14 +233,50 @@ export default class Server extends Game {
     }
   }
 
+  async watchForChangesAndRemoveFromCache() {
+    const fsWatcher = Deno.watchFs("./src");
+    for await (const change of fsWatcher) {
+      if (change.kind === "modify") {
+        const paths = change.paths.map((path) =>
+          `./src${path.split("src")[1]}`
+        );
+        for (const path in paths) cache[paths[path]] = null;
+      }
+    }
+  }
+
   start(): Promise<void> {
+    this.watchForChangesAndRemoveFromCache();
     return this.startServer();
   }
 
-  match(player1Socket: WebSocket, player2Socket: WebSocket): void {
-    player1Socket.send(JSON.stringify({ op: 2, d: "Player 2 joined" }));
-    player2Socket.send(JSON.stringify({ op: 2, d: "Ready" }));
-    this.round(player1Socket, player2Socket);
+  async match(
+    player1Socket: WebSocket,
+    player2Socket: WebSocket,
+    matchIndex: number,
+  ): Promise<void> {
+    for (let i = 0; i < this.tries; i++) {
+      const matchResults = this.matches[matchIndex].results;
+      if (
+        matchResults.filter((res) => res).length >= this.triesLimit ||
+        matchResults.filter((res) => !res).length >= this.triesLimit
+      ) {
+        break;
+      }
+      player1Socket.send(
+        JSON.stringify({
+          op: 2,
+          d: { status: "ready", msg: "Player 2 joined", rules: this.rules },
+        }),
+      );
+      player2Socket.send(
+        JSON.stringify({
+          op: 2,
+          d: { status: "ready", msg: "Player 1 joined", rules: this.rules },
+        }),
+      );
+      matchResults.push(await this.round(player1Socket, player2Socket));
+    }
   }
 
   round(player1Socket: WebSocket, player2Socket: WebSocket): Promise<boolean> {
@@ -186,6 +286,7 @@ export default class Server extends Game {
     return new Promise<boolean>((resolve) => {
       player1Socket.onmessage = (message) => {
         const data = JSON.parse(message.data) as WsResponse;
+        console.log(data);
         if (data.op === 3) player1Res = data.d;
         if (!player2Res) {
           player1Socket.send(
@@ -204,6 +305,7 @@ export default class Server extends Game {
       };
       player2Socket.onmessage = (message) => {
         const data = JSON.parse(message.data) as WsResponse;
+        console.log(data);
         if (data.op === 3) player2Res = data.d;
         if (!player1Res) {
           player2Socket.send(
@@ -230,15 +332,16 @@ export default class Server extends Game {
     player2Res: string,
   ): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
+      console.log(player1Res, player2Res);
       const player1Item = this.items.find((item) => item.name === player1Res);
       const player2Item = this.items.find((item) => item.name === player2Res);
       if (player1Item && player2Item) {
         const result = Server.compare(player1Item, player2Item);
-        player1Socket.send(JSON.stringify({ op: 3, d: result }));
+        player1Socket.send(JSON.stringify({ op: 3, d: player2Item.name }));
         player2Socket.send(
           JSON.stringify({
             op: 3,
-            d: result === "win" ? "lose" : (result === "draw" ? "draw" : "win"),
+            d: player1Item.name,
           }),
         );
         resolve(result === "win");
