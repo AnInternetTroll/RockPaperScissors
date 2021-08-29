@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --no-check
+#!/usr/bin/env -S deno run --no-check --allow-read
 import Item from "./Item.ts";
 
 export interface GameOpts {
@@ -80,6 +80,9 @@ export default class Game {
   bot_attempt(): Item {
     return this.items[Math.round(Math.random() * (this.items.length - 1))];
   }
+}
+
+class Offline extends Game {
   offline_round(): CompareReturn {
     const res = prompt(
       `Pick one of: ${
@@ -98,6 +101,12 @@ export default class Game {
     let triesLeft = this.tries;
     const results: boolean[] = [];
     for (let i = 0; i < triesLeft; i++) {
+      if (
+        results.filter((res) => res).length >= this.triesLimit ||
+        results.filter((res) => !res).length >= this.triesLimit
+      ) {
+        break;
+      }
       const result = this.offline_round();
       switch (result) {
         case "draw": {
@@ -122,16 +131,6 @@ export default class Game {
 }
 
 if (import.meta.main) {
-  /*
-    const rock = new Item(["paper"], { name: "rock" });
-  const paper = new Item(["scissors"], { name: "paper" });
-  const scissors = new Item(["rock"], { name: "scissors" });
-
-  console.log(Game.compare(paper, paper));
-  console.log(Game.compare(paper, rock));
-  console.log(Game.compare(rock, scissors));
-  console.log(Game.compare(scissors, rock));
-  */
-  const game = new Game();
+  const game = new Offline();
   game.offline();
 }

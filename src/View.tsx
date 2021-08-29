@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "https://esm.sh/react";
 import { render } from "https://esm.sh/react-dom";
 
 import { Game, Item } from "./mod.ts";
-import type { CompareReturn, Rules } from "./mod.ts";
+import type { Rules } from "./mod.ts";
 
 interface PlayerHuman {
   bot: false;
