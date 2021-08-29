@@ -41,6 +41,7 @@ const canRead = (await Deno.permissions.request({ name: "read", path: "./" }))
 
 const cache: Record<string, string | null> = {};
 
+const textDecoder = new TextDecoder();
 if (!canRead) {
   console.log("Please give permission to read in the current directory");
   Deno.exit(1);
@@ -75,7 +76,12 @@ export default class Server extends Game {
   async handleConn(conn: Deno.Conn) {
     const httpConn = Deno.serveHttp(conn);
     for await (const e of httpConn) {
-      this.handle(e);
+      try {
+        this.handle(e);
+      } catch (err) {
+        console.log(err);
+        continue;
+      }
     }
   }
 
@@ -160,11 +166,18 @@ export default class Server extends Game {
       path.split("/").at(-1) ? path : `${path}index.html`
     }`;
     try {
-      const file = Deno.readFileSync(
-        pathToFile,
-      );
-      let contentType = "";
+      let file: string;
       const ext = path.split(".").at(-1);
+      if (cache[pathToFile]) file = cache[pathToFile]!;
+      else if (!ext?.includes("ts")) {
+        file = textDecoder.decode(
+          await Deno.readFile(
+            pathToFile,
+          ),
+        );
+        cache[pathToFile] = file;
+      }
+      let contentType = "";
       switch (ext) {
         case "svg": {
           contentType = "image/svg+xml";
@@ -215,7 +228,7 @@ export default class Server extends Game {
           break;
       }
       e.respondWith(
-        new Response(new TextDecoder().decode(file), {
+        new Response(file!, {
           headers: { "Content-Type": contentType },
         }),
       );

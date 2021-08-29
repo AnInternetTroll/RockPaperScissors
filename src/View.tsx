@@ -288,8 +288,6 @@ function Online() {
   const [player2Item, setPlayer2Item] = useState<Item>();
   const [game, setGame] = useState<Game>();
 
-  const [status, setStatus] = useState("");
-
   const [ws, setWs] = useState<WebSocket>();
 
   function connect() {
@@ -314,7 +312,6 @@ function Online() {
     };
     ws.onmessage = (e) => {
       const data = JSON.parse(e.data);
-      setStatus(e.data);
       console.log(e.data);
       switch (data.op) {
         case 2: {
@@ -397,7 +394,6 @@ function Online() {
           />
         )
         : ""}
-      <p>{status}</p>
     </>
   );
 }

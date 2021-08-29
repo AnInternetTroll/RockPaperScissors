@@ -1,6 +1,7 @@
 .playable {
     cursor: pointer;
 }
+
 .item.player1 {
     grid-column: 1;
     height: max-content;
@@ -19,7 +20,7 @@
     display: grid;
     position: relative;
     margin-right: auto;
-    margin-left: auto;  
+    margin-left: auto;
 }
 
 @media screen and (min-width: 600px) {
