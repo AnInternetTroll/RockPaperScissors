@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "https://esm.sh/react";
 import { render } from "https://esm.sh/react-dom";
-
 import { Game, Item } from "./mod.ts";
 import type { Rules } from "./mod.ts";
 
@@ -99,7 +98,7 @@ function PlayerView(
     return (
       <img
         src={botPreview?.picture}
-        className={`item player${player.playerPos} playable`}
+        className={`item player${player.playerPos}`}
         style={{ height: `${100 / (game.items.length + 2)}vh` }}
       />
     );
@@ -109,6 +108,7 @@ function PlayerView(
 function GameView({ player1, player2, game }: GameViewOpts) {
   const [result, setResult] = useState("");
   const [results, setResults] = useState<boolean[]>([]);
+  const failSoundRef = React.createRef<HTMLAudioElement>();
 
   const [timerPreview, setTimerPreview] = useState(game.time);
   const [timerPreviewInterval, setTimerPreviewInterval] = useState<number>();
@@ -125,6 +125,7 @@ function GameView({ player1, player2, game }: GameViewOpts) {
 
   function reset() {
     setTimerPreview(game.time);
+    clearInterval(timerPreviewInterval);
     setTimerPreviewInterval(undefined);
     if (!player1.bot) player1.setItem(undefined);
     if (!player2.bot) player2.setItem(undefined);
@@ -134,6 +135,12 @@ function GameView({ player1, player2, game }: GameViewOpts) {
     clearInterval(timerPreviewInterval);
     setTimerPreview(undefined);
     setResult("End game");
+  }
+
+  function restart() {
+    setResult("");
+    setResults([]);
+    reset();
   }
 
   useEffect(() => stopOrReset(), [
@@ -146,6 +153,7 @@ function GameView({ player1, player2, game }: GameViewOpts) {
         if (player1.item && player2.item) {
           if (!player1.bot && (timerPreview && timerPreview !== 1)) {
             setResult("Too early");
+            failSoundRef.current?.play();
             clearInterval(timerPreviewInterval);
             setResults([...results, false]);
           } else if (!timerPreview) {
@@ -155,6 +163,7 @@ function GameView({ player1, player2, game }: GameViewOpts) {
             const res = Game.compare(player1.item, player2.item);
             setResult(res);
             if (res === "draw") return reset();
+            if (res === "lose") failSoundRef.current?.play();
             setResults([...results, res === "win"]);
           }
         }
@@ -186,6 +195,7 @@ function GameView({ player1, player2, game }: GameViewOpts) {
       if (!timerPreview && timerPreviewInterval) {
         clearInterval(timerPreviewInterval);
         setResult("Too late");
+        failSoundRef.current?.play();
         setResults([...results, false]);
       }
     }, [timerPreview, clearInterval, timerPreviewInterval, setResult]);
@@ -195,29 +205,38 @@ function GameView({ player1, player2, game }: GameViewOpts) {
         const res = Game.compare(player1.item, player2.item);
         if (res === "draw") return reset();
         setResult(res);
+        if (res === "lose") failSoundRef.current?.play();
         setResults([...results, res === "win"]);
       }
     }, [player1.item, player2.item, setResult, Game.compare]);
   }
   return (
-    <div className="gameview">
-      <PlayerView player={player1} game={game} />
-      {game.time
-        ? (
-          <p
-            className="timer"
-            style={{
-              color: timerPreview !== 1 ? "red" : "green",
-            }}
-          >
-            {timerPreview}
-          </p>
-        )
-        : ""}
-      <p className="result">{result}</p>
-      <p className="results">{results.map((result) => (result ? "x" : "o"))}</p>
-      <PlayerView player={player2} game={game} />
-    </div>
+    <>
+      <button onClick={restart}>Restart</button>
+      <audio ref={failSoundRef}>
+        <source src="/assets/fail.mp3" type="audio/mp3"></source>
+      </audio>
+      <div className="gameview">
+        <PlayerView player={player1} game={game} />
+        {game.time
+          ? (
+            <p
+              className="timer"
+              style={{
+                color: timerPreview !== 1 ? "red" : "green",
+              }}
+            >
+              {timerPreview}
+            </p>
+          )
+          : ""}
+        <p className="result">{result}</p>
+        <p className="results">
+          {results.map((result) => (result ? "x" : "o"))}
+        </p>
+        <PlayerView player={player2} game={game} />
+      </div>
+    </>
   );
 }
 

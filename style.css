@@ -1,5 +1,21 @@
+.darkmode {
+    color: #fff;
+    background-color: #000;
+}
+
+.lightmode {
+    color: #000;
+    background-color: #fff;
+}
+
 .playable {
     cursor: pointer;
+    transition: transform 0.5s ease-in-out;
+}
+
+.playable:hover {
+    transform: scale(1.75, 1.75);
+    z-index: 10;
 }
 
 .item.player1 {

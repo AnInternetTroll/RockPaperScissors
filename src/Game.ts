@@ -62,10 +62,10 @@ export default class Game {
   }
 
   /**
-     * If the first
-     * @param item1 First item
-     * @param item2 Second Items
-     */
+   * If the first
+   * @param item1 First item
+   * @param item2 Second Items
+   */
   static compare(item1: Item, item2: Item): CompareReturn {
     for (let i = 0; i < item1.weakness.length; i++) {
       for (let ii = 0; ii < item2.weakness.length; ii++) {

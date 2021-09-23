@@ -39,9 +39,9 @@ type Match = {
 const canRead = (await Deno.permissions.request({ name: "read", path: "./" }))
   .state === "granted";
 
-const cache: Record<string, string | null> = {};
+const cache: Record<string, Uint8Array | null> = {};
 
-const textDecoder = new TextDecoder();
+const textEncoder = new TextEncoder();
 if (!canRead) {
   console.log("Please give permission to read in the current directory");
   Deno.exit(1);
@@ -166,21 +166,24 @@ export default class Server extends Game {
       path.split("/").at(-1) ? path : `${path}index.html`
     }`;
     try {
-      let file: string;
+      let file: Uint8Array;
       const ext = path.split(".").at(-1);
       if (cache[pathToFile]) file = cache[pathToFile]!;
       else if (!ext?.includes("ts")) {
-        file = textDecoder.decode(
-          await Deno.readFile(
-            pathToFile,
-          ),
+        file = await Deno.readFile(
+          pathToFile,
         );
         cache[pathToFile] = file;
       }
       let contentType = "";
+      console.log(pathToFile);
       switch (ext) {
         case "svg": {
           contentType = "image/svg+xml";
+          break;
+        }
+        case "mp3": {
+          contentType = "audio/mpeg";
           break;
         }
         case "js":
@@ -198,7 +201,7 @@ export default class Server extends Game {
               },
             });
             for (const [_, text] of Object.entries(files)) {
-              cache[pathToFile] = Server.JSMinify(text);
+              cache[pathToFile] = textEncoder.encode(Server.JSMinify(text));
               return e.respondWith(
                 new Response(text, {
                   headers: { "Content-Type": contentType },
