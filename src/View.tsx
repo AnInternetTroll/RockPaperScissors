@@ -1,7 +1,12 @@
 /// <reference lib="dom" />
 
-import React, { useEffect, useState } from "https://esm.sh/react";
-import { render } from "https://esm.sh/react-dom";
+/**
+ * @jsx h
+ * @jsxFrag Fragment
+ */
+import { createRef, Fragment, h, render } from "https://esm.sh/preact";
+import { useEffect, useState } from "https://esm.sh/preact/hooks";
+import type { StateUpdater } from "https://esm.sh/preact/hooks";
 import { Game, Item } from "./mod.ts";
 import type { Rules } from "./mod.ts";
 
@@ -9,7 +14,7 @@ interface PlayerHuman {
   bot: false;
   username?: string;
   item?: Item;
-  setItem: React.Dispatch<React.SetStateAction<Item | undefined>>;
+  setItem: StateUpdater<Item | undefined>;
   playerPos: 1 | 2;
 }
 
@@ -108,7 +113,7 @@ function PlayerView(
 function GameView({ player1, player2, game }: GameViewOpts) {
   const [result, setResult] = useState("");
   const [results, setResults] = useState<boolean[]>([]);
-  const failSoundRef = React.createRef<HTMLAudioElement>();
+  const failSoundRef = createRef<HTMLAudioElement>();
 
   const [timerPreview, setTimerPreview] = useState(game.time);
   const [timerPreviewInterval, setTimerPreviewInterval] = useState<number>();
@@ -372,21 +377,33 @@ function Online() {
       <input
         type="text"
         name="username"
+        placeholder="Steve"
         required
-        onChange={(e) => setUsername(e.target.value)}
+        onChange={(e) =>
+          /* @ts-ignore preact type is wrong */
+          setUsername(e.target.value)}
       />{" "}
-      <br />
       <label>Want to join a friend?</label>
-      <input
-        type="checkbox"
-        onChange={(e) => setLookForPlayer(e.target.checked)}
-      />
-      <br />
+      <label class="switch">
+        <input
+          type="checkbox"
+          onChange={(e) =>
+            /* @ts-ignore preact type is wrong */
+            setLookForPlayer(e.target.checked)}
+        />
+        <span class="slider round"></span>
+      </label>
       {lookForPlayer
         ? (
           <>
             <label>Who are you looking for?</label>
-            <input onChange={(e) => setAgainst(e.target.value)} />
+            <input
+              type="text"
+              placeholder="Alex"
+              onChange={(e) =>
+                /* @ts-ignore preact type is wrong */
+                setAgainst(e.target.value)}
+            />
           </>
         )
         : ""}
@@ -425,30 +442,35 @@ function Main() {
   return (
     <>
       <h1>{title}</h1>
-      <button
-        onClick={() => {
-          setGamemode("offline");
-          setTitle("Vs. Bot");
-        }}
-      >
-        Offline
-      </button>
-      <button
-        onClick={() => {
-          setGamemode("online");
-          setTitle("Vs. Human");
-        }}
-      >
-        Online
-      </button>
-      <button
-        onClick={() => {
-          setGamemode("split");
-          setTitle("Split");
-        }}
-      >
-        SplitScreen
-      </button>
+      <div class="btn-group">
+        <button
+          onClick={() => {
+            setGamemode("offline");
+            setTitle("Vs. Bot");
+          }}
+          class={gamemode === "offline" ? "active" : ""}
+        >
+          Offline
+        </button>
+        <button
+          onClick={() => {
+            setGamemode("online");
+            setTitle("Vs. Human");
+          }}
+          class={gamemode === "online" ? "active" : ""}
+        >
+          Online
+        </button>
+        <button
+          onClick={() => {
+            setGamemode("split");
+            setTitle("Split");
+          }}
+          class={gamemode === "split" ? "active" : ""}
+        >
+          SplitScreen
+        </button>
+      </div>
       <hr />
       {gamemode === "offline" ? <Offline /> : gamemode === "online"
         ? <Online />

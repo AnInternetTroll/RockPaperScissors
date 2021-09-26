@@ -1,5 +1,6 @@
 #!/usr/bin/env -S deno run --no-check --allow-net --allow-read --unstable --watch
 import Game from "./Game.ts";
+import { minify } from "https://esm.sh/terser";
 
 interface WsResponseRaw {
   op: number;
@@ -176,7 +177,6 @@ export default class Server extends Game {
         cache[pathToFile] = file;
       }
       let contentType = "";
-      console.log(pathToFile);
       switch (ext) {
         case "svg": {
           contentType = "image/svg+xml";
@@ -197,13 +197,17 @@ export default class Server extends Game {
               check: false,
               bundle: "module",
               compilerOptions: {
-                inlineSourceMap: true,
+                // inlineSourceMap: true,
               },
             });
             for (const [_, text] of Object.entries(files)) {
-              cache[pathToFile] = textEncoder.encode(Server.JSMinify(text));
+              cache[pathToFile] = textEncoder.encode(
+                (await minify(text, {
+                  toplevel: true,
+                })).code,
+              );
               return e.respondWith(
-                new Response(text, {
+                new Response(cache[pathToFile], {
                   headers: { "Content-Type": contentType },
                 }),
               );
@@ -250,12 +254,13 @@ export default class Server extends Game {
   }
 
   async watchForChangesAndRemoveFromCache() {
-    const fsWatcher = Deno.watchFs("./src");
+    const fsWatcher = Deno.watchFs("./");
     for await (const change of fsWatcher) {
       if (change.kind === "modify") {
-        const paths = change.paths.map((path) =>
-          `./src${path.split("src")[1]}`
-        );
+        const paths = change.paths.map((path) => {
+          const folders = path.split("/");
+          return folders.slice(folders.findIndex((f) => f === ".")).join("/");
+        });
         for (const path in paths) cache[paths[path]] = null;
       }
     }

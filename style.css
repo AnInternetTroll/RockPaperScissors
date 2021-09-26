@@ -1,11 +1,5 @@
-.darkmode {
-    color: #fff;
-    background-color: #000;
-}
-
-.lightmode {
-    color: #000;
-    background-color: #fff;
+body {
+    background-color: #fad02c;
 }
 
 .playable {
@@ -69,4 +63,123 @@
     margin: auto;
     font-size: 2em;
     font-weight: bold;
+}
+
+/* actual styling */
+
+button {
+    background-color: #333652;
+    border: 1px solid #000;
+    /* White text */
+    color: white;
+    /* Some padding */
+    padding: 10px 24px;
+    /* Pointer/hand icon */
+    cursor: pointer;
+    float: left;
+    box-shadow: 2px 2px 2px #999;
+}
+
+button:active {
+    background-color: #333652;
+    box-shadow: 1px 1px 1px #666;
+    transform: translateY(2px);
+}
+
+.btn-group button:not(:last-child) {
+    /* Prevent double borders */
+    border-right: none;
+}
+
+/* Clear floats (clearfix hack) */
+
+.btn-group:after {
+    content: "";
+    clear: both;
+    display: table;
+}
+
+/* Add a background color on hover */
+
+.btn-group button:hover {
+    background-color: #5c5f7f;
+}
+
+button.active {
+    background-color: #5c5f7f;
+}
+
+input[type=text] {
+    display: block;
+    padding: 5px;
+    margin: 5px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    transition: .3s border-color;
+}
+
+input[type=text]:hover {
+    border: 1px solid #aaa;
+}
+
+input[type=checkbox] {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch {
+    position: relative;
+    display: block;
+    margin: 5px;
+    width: 60px;
+    height: 34px;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input[type=checkbox]:checked+.slider {
+    background-color: #333652;
+}
+
+input[type=checkbox]:focus+.slider {
+    box-shadow: 0 0 1px #333652;
+}
+
+input[type=checkbox]:checked+.slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+/* Rounded sliders */
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
 }
