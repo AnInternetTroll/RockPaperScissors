@@ -1,5 +1,5 @@
 #!/usr/bin/env -S deno run --no-check --allow-net --allow-read --unstable --watch
-import Game from "./Game.ts";
+import { Game } from "./mod.ts";
 import { minify } from "https://esm.sh/terser";
 
 interface WsResponseRaw {

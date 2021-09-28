@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --allow-net --no-check
 
-import Game from "./Game.ts";
+import { Game } from "./mod.ts";
 
 const ws = new WebSocket("ws://localhost:3000");
 

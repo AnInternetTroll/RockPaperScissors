@@ -1,5 +1,7 @@
-Dependencies:
+# Developing
+## Dependencies:
 
 - deno
-- react
-- react-dom
+- preact
+- terser
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env -S deno run --no-check --allow-read
-import Item from "./Item.ts";
+import { Item } from "./mod.ts";
 
 export interface GameOpts {
   tries?: number;
@@ -18,7 +18,7 @@ export interface Rules {
   }[];
 }
 
-export default class Game {
+export class Game {
   tries: number;
   triesLimit: number;
   items: Item[];

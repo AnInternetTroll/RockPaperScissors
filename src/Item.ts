@@ -3,7 +3,7 @@ interface ItemMetadata {
   picture: string;
 }
 
-export default class Item {
+export class Item {
   public weakness: string[];
   public name: string;
   public picture: string;
