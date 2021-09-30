@@ -50,6 +50,10 @@ export class Game {
     this.items = items;
   }
 
+  /**
+   * A helper function to get the rules of a game.
+   * Used in multiplayer to tell all clients the items and how many tries in total.
+   */
   get rules(): Rules {
     return {
       tries: this.tries,
@@ -62,7 +66,10 @@ export class Game {
   }
 
   /**
-   * If the first
+   * Compares 2 items from the perspective of the first.
+   * So if the first item beats the second then it returns "win"
+   * else it returns "lose"
+   * else it returns "draw"
    * @param item1 First item
    * @param item2 Second Items
    */
@@ -77,6 +84,11 @@ export class Game {
     }
     return "draw";
   }
+
+  /**
+   * A helper function that returns a random item from the game.
+   * @returns Bot choice
+   */
   bot_attempt(): Item {
     return this.items[Math.round(Math.random() * (this.items.length - 1))];
   }
