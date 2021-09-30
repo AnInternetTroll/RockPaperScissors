@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --no-check --allow-net --allow-read --unstable --watch
 import { Game } from "./mod.ts";
-import { minify } from "./deps_backend.ts";
+import { minify, parse as parseFlags } from "./deps_backend.ts";
 
 interface WsResponseRaw {
   op: number;
@@ -373,6 +373,8 @@ export default class Server extends Game {
   }
 }
 
-const server = new Server(3000);
+const args = parseFlags(Deno.args);
+
+const server = new Server(args.p || args.port || 3000);
 
 server.start();
