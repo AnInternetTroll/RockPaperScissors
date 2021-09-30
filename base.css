@@ -1,0 +1,52 @@
+.item.player1 {
+    grid-column: 1;
+    height: max-content;
+}
+
+.item {
+    margin: 0 auto;
+}
+
+.item.player2 {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+.gameview {
+    display: grid;
+    position: relative;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+@media screen and (min-width: 600px) {
+    .gameview {
+        width: 50%;
+    }
+}
+
+@media screen and (max-width: 992px) {
+    .gameview {
+        width: 100%;
+    }
+}
+
+.gameview .result {
+    margin: auto;
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.gameview .results {
+    margin: auto;
+    grid-column: 2;
+    grid-row: 3;
+}
+
+.gameview .timer {
+    grid-column: 2;
+    grid-row: 1;
+    margin: auto;
+    font-size: 2em;
+    font-weight: bold;
+}

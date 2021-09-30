@@ -1,11 +1,11 @@
+/// <reference lib="dom" />
 /**
  * @jsx h
  * @jsxFrag Fragment
  */
-import { h } from "https://esm.sh/preact";
-import { useState } from "https://esm.sh/preact/hooks";
+import { h, useState } from "../deps_frontend.ts";
 import { Game, Item } from "../mod.ts";
-import { GameView } from "./GameView.tsx";
+import { GameView } from "./mod.ts";
 
 export function SplitScreen() {
   const game = new Game();

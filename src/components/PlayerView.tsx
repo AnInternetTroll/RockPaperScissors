@@ -1,10 +1,10 @@
+/// <reference lib="dom" />
 /**
  * @jsx h
  * @jsxFrag Fragment
  */
-import { Fragment, h } from "https://esm.sh/preact";
-import { useEffect, useState } from "https://esm.sh/preact/hooks";
-import type { StateUpdater } from "https://esm.sh/preact/hooks";
+import { Fragment, h, useEffect, useState } from "../deps_frontend.ts";
+import type { StateUpdater } from "../deps_frontend.ts";
 import { Game, Item } from "../mod.ts";
 
 interface PlayerHuman {

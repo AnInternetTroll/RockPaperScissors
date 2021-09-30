@@ -1,12 +1,12 @@
+/// <reference lib="dom" />
 /**
  * @jsx h
  * @jsxFrag Fragment
  */
-import { Fragment, h } from "https://esm.sh/preact";
-import { useEffect, useState } from "https://esm.sh/preact/hooks";
+import { Fragment, h, useEffect, useState } from "../deps_frontend.ts";
 import { Game, Item } from "./../mod.ts";
 import type { Rules } from "./../mod.ts";
-import { GameView } from "./GameView.tsx";
+import { GameView } from "./mod.ts";
 
 export function Online() {
   const [lookForPlayer, setLookForPlayer] = useState(false);

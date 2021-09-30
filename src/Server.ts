@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --no-check --allow-net --allow-read --unstable --watch
 import { Game } from "./mod.ts";
-import { minify } from "https://esm.sh/terser";
+import { minify } from "./deps_backend.ts";
 
 interface WsResponseRaw {
   op: number;
@@ -104,7 +104,7 @@ export default class Server extends Game {
       switch (data.op) {
         // Ping
         case 1: {
-          socket.send(JSON.stringify({ d: data.d }));
+          socket.send(JSON.stringify({ op: 1, d: data.d }));
           break;
         }
         // Join

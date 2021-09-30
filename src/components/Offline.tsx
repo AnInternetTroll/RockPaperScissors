@@ -1,11 +1,11 @@
+/// <reference lib="dom" />
 /**
  * @jsx h
  * @jsxFrag Fragment
  */
-import { h } from "https://esm.sh/preact";
-import { useEffect, useState } from "https://esm.sh/preact/hooks";
+import { h, useEffect, useState } from "../deps_frontend.ts";
 import { Game, Item } from "../mod.ts";
-import { GameView } from "./GameView.tsx";
+import { GameView } from "./mod.ts";
 
 export function Offline() {
   const game = new Game({ time: 3 });

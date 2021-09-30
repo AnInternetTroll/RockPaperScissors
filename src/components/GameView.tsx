@@ -1,12 +1,20 @@
+/// <reference lib="dom" />
+
 /**
  * @jsx h
  * @jsxFrag Fragment
  */
-import { createRef, Fragment, h } from "https://esm.sh/preact";
-import { useEffect, useState } from "https://esm.sh/preact/hooks";
+import {
+  createRef,
+  Fragment,
+  h,
+  useEffect,
+  useState,
+} from "../deps_frontend.ts";
+
 import { Game } from "../mod.ts";
-import { PlayerView } from "./PlayerView.tsx";
-import type { Player } from "./PlayerView.tsx";
+import { PlayerView } from "./mod.ts";
+import type { Player } from "./mod.ts";
 
 export interface GameViewOpts {
   player1: Player;
